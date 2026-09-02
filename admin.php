@@ -98,7 +98,7 @@ $complaints = $pdo->query("SELECT c.*, u.name as customer_name FROM complaints c
             </div>
         </section>
 
-        <!-- Customer Complaints Oversight -->
+        <!-- Customer Complaints -->
         <section class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
             <h2 class="text-2xl font-bold text-slate-900">Customer Support Tickets</h2>
             <div class="mt-6 space-y-4">
@@ -116,7 +116,7 @@ $complaints = $pdo->query("SELECT c.*, u.name as customer_name FROM complaints c
         </section>
     </main>
 
-    <!-- Create Staff Modal -->
+    <!--Staff Modal -->
 <div id="staffModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 p-4">
     <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
         <h3 class="text-xl font-bold">Add Staff Account</h3>

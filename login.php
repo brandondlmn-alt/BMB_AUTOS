@@ -41,7 +41,7 @@ if (isset($_SESSION['user'])) {
             <button type="submit" class="w-full rounded-2xl bg-blue-600 py-3 font-semibold text-white shadow hover:bg-blue-500">Sign In</button>
         </form>
 
-        <!-- Register Form (Hidden by default) -->
+        <!-- Register Form -->
         <form id="registerForm" class="space-y-4 hidden">
             <input type="hidden" name="action" value="register_customer">
             <div>

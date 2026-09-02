@@ -9,7 +9,7 @@ $customerName = $currentUser ? htmlspecialchars($currentUser['name']) : 'Guest';
 $carStmt = $pdo->query("SELECT * FROM vehicles WHERE status = 'Available' ORDER BY id DESC LIMIT 6");
 $cars = $carStmt->fetchAll();
 
-// Fetch customer bookings if logged in
+// Fetch customer bookings if logged in 
 $myBookings = [];
 if ($currentUser) {
     $bStmt = $pdo->prepare("SELECT * FROM bookings WHERE customer_id = ? ORDER BY booking_date DESC");
