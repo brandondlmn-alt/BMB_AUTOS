@@ -44,33 +44,51 @@ An end-to-end automotive web application built with **PHP**, **MySQL**, **Tailwi
 * **Service Booking System:** Schedule minor services, brake overhauls, or pre-sale evaluations with assigned technicians.
 * **Formal Customer Support:** Dedicated ticket filing system with tracking for service, billing, and inspection inquiries.
 * **Master Administration:** Complete CRUD capabilities over staff members and central visibility across all mechanic appointments.
+* **Mobile App JSON API:** The backend now exposes REST-style JSON endpoints for an Android application built with Kotlin and Retrofit.
+* **Token Authentication:** Mobile clients authenticate using Bearer tokens instead of traditional PHP sessions, enabling secure app-to-server communication.
 
----
+## Mobile App & REST API Integration
+
+BMB Autos now includes a dedicated REST API layer under the `api/` folder so that a mobile application can communicate with the dealership platform without using the browser UI. The backend serves JSON responses for app screens such as login, vehicle listings, vehicle details, bookings, profile updates, and trade-in requests.
+
+This integration supports the Android app being developed in Kotlin with Retrofit, while still preserving the original PHP web experience for desktop and browser users. The API is designed to work with secure token-based access, allowing mobile users to authenticate once and include the returned bearer token in subsequent requests.
+
+The database has also been extended for app support, including new `users` fields such as `api_token`, `google_id`, `notify_email`, and `notify_push`, together with a `transactions` table used for mobile purchase tracking and app-related payment flows.
 
 ## Directory & File Structure
 
 ```text
 C:\wamp64\www\BMB_AUTOS\
-├── images/             # Vehicle photography, branding, and vector logo
-│   ├── logo.svg        # Scalable automotive emblem
-│   └── ...             # Showroom vehicle imagery
-├── screenshots/        # Application interface previews for documentation
-├── about.php           # Company mission and business background
-├── admin.php           # Admin control panel (Staff CRUD & master schedule)
-├── cars.php            # Vehicle showroom with lightbox preview & consignment modal
-├── db.php              # Global PDO database connection handler
-├── index.php           # Dynamic homepage with active bookings & featured fleet
-├── login.php           # Dual-action sign in and registration portal
-├── logout.php          # Session termination script
-├── mechanic.php        # Mechanic workshop workbench & evaluation management
-├── nav.php             # Role-based adaptive navigation header
-├── process.php         # Centralized AJAX/Form API endpoint
-├── profile.php         # Customer account editing and account deletion
-├── sales.php           # Sales rep consignment and inventory publishing
-├── script.js           # Asynchronous form handlers & toast notification system
-├── servicing.php       # Service & maintenance booking interface
-├── setup_db.php        # 1-Click automated database installer & data seeder
-└── support.php         # Customer dispute resolution & complaint filing
+├── api/                 # REST API layer for mobile app JSON integration
+│   ├── config.php       # API configuration, DB connection, and shared settings
+│   ├── auth_check.php   # Bearer token validation middleware for protected routes
+│   ├── register.php     # Mobile user registration endpoint
+│   ├── login.php        # Login endpoint returning access tokens
+│   ├── cars.php         # Vehicle listing endpoint for app catalog screens
+│   ├── car_details.php  # Individual vehicle detail endpoint
+│   ├── bookings.php     # Service and booking management endpoints
+│   ├── trade_in.php     # Trade-in submission and processing endpoint
+│   ├── update_profile.php # User profile update endpoint for mobile clients
+├── images/              # Vehicle photography, branding, and vector logo
+│   ├── logo.svg         # Scalable automotive emblem
+│   └── ...              # Showroom vehicle imagery
+├── screenshots/         # Application interface previews for documentation
+├── about.php            # Company mission and business background
+├── admin.php            # Admin control panel (Staff CRUD & master schedule)
+├── cars.php             # Vehicle showroom with lightbox preview & consignment modal
+├── db.php               # Global PDO database connection handler
+├── index.php            # Dynamic homepage with active bookings & featured fleet
+├── login.php            # Dual-action sign in and registration portal
+├── logout.php           # Session termination script
+├── mechanic.php         # Mechanic workshop workbench & evaluation management
+├── nav.php              # Role-based adaptive navigation header
+├── process.php          # Centralized AJAX/Form API endpoint
+├── profile.php          # Customer account editing and account deletion
+├── sales.php            # Sales rep consignment and inventory publishing
+├── script.js            # Asynchronous form handlers & toast notification system
+├── servicing.php        # Service & maintenance booking interface
+├── setup_db.php         # 1-Click automated database installer & data seeder
+└── support.php          # Customer dispute resolution & complaint filing
 ```
 
 ## Setup & Execution Guide
@@ -103,6 +121,35 @@ C:\wamp64\www\BMB_AUTOS\
 	Navigate to the live prototype:
 
 	<http://localhost/BMB_AUTOS/index.php>
+
+## API Testing & Authentication
+
+The REST API can be tested in several ways, including Postman, curl, or directly in a browser when the endpoint is public. For protected routes, the API expects an HTTP `Authorization` header with a Bearer token.
+
+Example header format:
+
+```http
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+### Example API Flow
+
+1. Register or log in using the mobile endpoints, such as `api/register.php` or `api/login.php`.
+2. Copy the returned `token` value from the JSON response.
+3. Include it in the request header for protected endpoints, for example:
+
+```http
+GET http://localhost/BMB_AUTOS/api/cars.php
+Authorization: Bearer YOUR_API_TOKEN
+```
+
+4. Use the same token for routes like `api/bookings.php`, `api/car_details.php`, `api/trade_in.php`, and `api/update_profile.php`.
+
+### Notes
+
+- Public endpoints can usually be tested directly in the browser.
+- Protected endpoints will return an authentication error if the token is missing, invalid, or expired.
+- When using Postman, set the request type to `GET`, `POST`, or `PUT` as required and add the token under the `Authorization` tab using the Bearer Token type.
 
 ## Demo Login Credentials
 
