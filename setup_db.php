@@ -10,15 +10,16 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 
+    // Create database if it doesn't exist
     $pdo->exec("CREATE DATABASE IF NOT EXISTS bmb_autos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
     $pdo->exec("USE bmb_autos");
 
     // Drop tables if re-running to cleanly reset
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
-    $pdo->exec("DROP TABLE IF EXISTS complaints, bookings, vehicles, users");
+    $pdo->exec("DROP TABLE IF EXISTS transactions, complaints, bookings, vehicles, users");
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
-    // 1. Users Table
+    // 1. Users Table (UPDATED for API and SSO)
     $pdo->exec("CREATE TABLE users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
@@ -26,6 +27,11 @@ try {
         password VARCHAR(255) NOT NULL,
         role ENUM('admin', 'mechanic', 'sales_rep', 'customer') DEFAULT 'customer',
         phone VARCHAR(20) DEFAULT '+27 11 000 0000',
+        api_token VARCHAR(255) NULL,
+        google_id VARCHAR(255) NULL,
+        fcm_token VARCHAR(255) NULL,
+        notify_email BOOLEAN DEFAULT TRUE,
+        notify_push BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
@@ -75,6 +81,19 @@ try {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )");
 
+    // 5. NEW Transactions Table (For App Purchases)
+    $pdo->exec("CREATE TABLE transactions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        vehicle_id INT NULL,
+        amount VARCHAR(50) NOT NULL,
+        payment_method VARCHAR(50) DEFAULT 'Card',
+        status ENUM('Pending', 'Completed', 'Failed') DEFAULT 'Completed',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+    )");
+
     // Seed Initial Users
     $userStmt = $pdo->prepare("INSERT INTO users (id, name, email, password, role) VALUES (?, ?, ?, ?, ?)");
     $users = [
@@ -85,26 +104,26 @@ try {
     ];
     foreach ($users as $u) { $userStmt->execute($u); }
 
-// Insert Vehicle Catalog
-$carStmt = $pdo->prepare("INSERT INTO vehicles (seller_id, make, model, year, price, mileage, type, transmission, fuel_type, image, evaluation_grade, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // Insert Vehicle Catalog
+    $carStmt = $pdo->prepare("INSERT INTO vehicles (seller_id, make, model, year, price, mileage, type, transmission, fuel_type, image, evaluation_grade, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-$expandedCars = [
-    [null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2023, 'R 689,900', '19,500 km', 'Bakkie / Double Cab', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2022, 'R 429,000', '22,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Mercedes-Benz', 'C200 AMG Line', 2021, 'R 579,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Ford', 'Ranger 2.0 Bi-Turbo Wildtrak', 2022, 'R 639,500', '28,000 km', 'Bakkie / Double Cab', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Hyundai', 'Tucson 2.0D N Line', 2023, 'R 549,900', '15,200 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Suzuki', 'Swift 1.2 GLX', 2023, 'R 219,900', '12,000 km', 'Hatchback', 'Manual', 'Petrol', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Toyota', 'Corolla 1.8 Prestige', 2022, 'R 289,900', '28,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Audi', 'A3 35 TFSI Sportback', 2020, 'R 359,500', '44,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'BMW', '320i M Sport', 2019, 'R 415,000', '48,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [null, 'Toyota', 'Fortuner 2.8 GD-6', 2020, 'R 649,000', '52,000 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-    [4, 'Volkswagen', 'Golf 8 GTI', 2021, 'R 580,000', '31,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation']
-];
+    $expandedCars = [
+        [null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2023, 'R 689,900', '19,500 km', 'Bakkie / Double Cab', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2022, 'R 429,000', '22,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Mercedes-Benz', 'C200 AMG Line', 2021, 'R 579,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Ford', 'Ranger 2.0 Bi-Turbo Wildtrak', 2022, 'R 639,500', '28,000 km', 'Bakkie / Double Cab', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Hyundai', 'Tucson 2.0D N Line', 2023, 'R 549,900', '15,200 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Suzuki', 'Swift 1.2 GLX', 2023, 'R 219,900', '12,000 km', 'Hatchback', 'Manual', 'Petrol', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Toyota', 'Corolla 1.8 Prestige', 2022, 'R 289,900', '28,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Audi', 'A3 35 TFSI Sportback', 2020, 'R 359,500', '44,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'BMW', '320i M Sport', 2019, 'R 415,000', '48,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Toyota', 'Fortuner 2.8 GD-6', 2020, 'R 649,000', '52,000 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [4, 'Volkswagen', 'Golf 8 GTI', 2021, 'R 580,000', '31,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation']
+    ];
 
-foreach ($expandedCars as $car) {
-    $carStmt->execute($car);
-}
+    foreach ($expandedCars as $car) {
+        $carStmt->execute($car);
+    }
 
     // Seed Bookings
     $bStmt = $pdo->prepare("INSERT INTO bookings (customer_id, mechanic_id, vehicle_info, service_type, booking_date, booking_time, condition_notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -121,7 +140,7 @@ foreach ($expandedCars as $car) {
     ];
     foreach ($complaints as $cp) { $cStmt->execute($cp); }
 
-    $statusMessages = ["Database 'bmb_autos' successfully rebuilt and populated with live records!"];
+    $statusMessages = ["Database 'bmb_autos' successfully rebuilt, updated for API, and populated with live records!"];
 } catch (PDOException $e) {
     $error = $e->getMessage();
 }
