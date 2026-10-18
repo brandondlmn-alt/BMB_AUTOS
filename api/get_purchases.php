@@ -6,7 +6,8 @@ $user = authenticate($pdo);
 
 try {
     $stmt = $pdo->prepare("
-        SELECT t.id as transaction_id, t.amount, t.created_at, v.make, v.model, v.year, v.image 
+        SELECT t.id as transaction_id, t.amount, t.created_at, 
+               v.stock_number, v.make, v.model, v.year, v.image 
         FROM transactions t 
         JOIN vehicles v ON t.vehicle_id = v.id 
         WHERE t.user_id = ? 
