@@ -117,6 +117,11 @@ try {
         [null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2022, 'R 429,000', '22,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
         [null, 'Mercedes-Benz', 'C200 AMG Line', 2021, 'R 579,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
         [null, 'Ford', 'Ranger 2.0 Wildtrak', 2022, 'R 639,500', '28,000 km', 'Bakkie', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Audi', 'RS3 Sportback', 2023, 'R 1,150,000', '8,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Land Rover', 'Defender 110', 2022, 'R 1,450,000', '24,000 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Kia', 'Sportage GT-Line', 2023, 'R 720,000', '12,500 km', 'SUV', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Volkswagen', 'Golf 8 R', 2022, 'R 850,000', '15,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        [null, 'Isuzu', 'D-Max 3.0 LSE', 2023, 'R 760,000', '10,000 km', 'Bakkie', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
         
         // Thabo's Cars (ID: 4)
         [4, 'Volkswagen', 'Golf 8 GTI', 2021, 'R 580,000', '31,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation'],
@@ -147,7 +152,7 @@ try {
     // Ayesha bought a Suzuki Swift from the dealership
     $tStmt = $pdo->prepare("INSERT INTO transactions (user_id, vehicle_id, amount, payment_method, status) VALUES (?, ?, ?, ?, ?)");
     $transactions = [
-        [5, 3, 'R 219,900', 'Bank Transfer', 'Completed'], // Assuming vehicle ID 3 was the Swift
+        [5, 3, 'R 219,900', 'Bank Transfer', 'Completed'],
         [6, 1, 'R 689,900', 'Finance', 'Pending'] 
     ];
     foreach ($transactions as $t) { $tStmt->execute($t); }
@@ -160,7 +165,7 @@ try {
     ];
     foreach ($complaints as $cp) { $cStmt->execute($cp); }
 
-    $statusMessages = ["Database 'bmb_autos' successfully rebuilt with MULTIPLE users and rich data!"];
+    $statusMessages = ["Database 'bmb_autos' successfully rebuilt with multiple users, rich data, and extra vehicles!"];
 } catch (PDOException $e) {
     $error = $e->getMessage();
 }
