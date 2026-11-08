@@ -37,15 +37,44 @@ An end-to-end automotive web application built with **PHP**, **MySQL**, **Tailwi
 
 ## Key System Features
 
-* **Interactive Vehicle Catalog:** Live car listings with hover image zoom, vehicle specs (mileage, transmission, fuel type), and full-size modal lightbox previews.
+* **Interactive Vehicle Catalog:** Live car listings with hover image zoom, vehicle specs (mileage, transmission, fuel type), stock counts, and full-size modal lightbox previews.
+* **Inventory Stock Control:** Every vehicle includes `stock_quantity`, with admin controls to increase/decrease stock and automatically mark cars as `Sold` when stock hits zero.
+* **Purchase & Receipt Flow:** Customers can buy a vehicle from the showroom, receive a transaction record, and land on a printable receipt page using `receipt.php?transaction_id=...`.
 * **Customer Consignment:** Vehicle owners submit their cars directly to the dealership to be certified and sold.
 * **Mechanic Inspections:** Workshop staff conduct pre-sale assessments, record technical notes, and certify roadworthiness grades (*Grade A*, *Grade B*, *Failed*).
 * **Consignment Sales Pipeline:** Sales representatives adjust retail pricing on evaluated cars and publish verified inventory directly to the storefront.
 * **Service Booking System:** Schedule minor services, brake overhauls, or pre-sale evaluations with assigned technicians.
 * **Formal Customer Support:** Dedicated ticket filing system with tracking for service, billing, and inspection inquiries.
 * **Master Administration:** Complete CRUD capabilities over staff members and central visibility across all mechanic appointments.
-* **Mobile App JSON API:** The backend now exposes REST-style JSON endpoints for an Android application built with Kotlin and Retrofit.
+* **Mobile-Ready UI:** The site has been optimized for tablet and phone layouts with responsive navigation, stacked forms, touch-friendly buttons, and viewport-aware scaling.
+* **Mobile App JSON API:** The backend exposes REST-style JSON endpoints for an Android application built with Kotlin and Retrofit.
 * **Token Authentication:** Mobile clients authenticate using Bearer tokens instead of traditional PHP sessions, enabling secure app-to-server communication.
+
+## Mobile Ready & Responsive Design
+
+The BMB Autos storefront and admin interfaces are now built to work comfortably on mobile devices, not just desktop screens.
+
+Highlights include:
+
+* responsive hamburger navigation for smaller screens
+* stacked layouts for forms, cards, and tables on phone widths
+* larger touch-friendly controls for CTAs and filters
+* viewport-aware scaling across all main pages
+* showroom search and filter controls that remain usable on mobile devices
+* printable receipt layouts suitable for mobile and desktop viewing
+
+## Purchase Flow & Transaction Handling
+
+The vehicle purchase workflow now enforces inventory safety checks:
+
+1. A customer selects a vehicle from the showroom.
+2. The backend checks the current available stock and rejects purchase if stock is zero or the vehicle is already marked sold.
+3. The vehicle stock is decremented by 1.
+4. If stock reaches zero, the vehicle status is updated to `Sold`.
+5. A `transactions` record is created and a redirect is sent to `receipt.php?transaction_id=...`.
+6. The customer receives a printable receipt for the order.
+
+This logic is enforced in the website flow and in the API purchase endpoint.
 
 ## Mobile App & REST API Integration
 
@@ -67,6 +96,7 @@ C:\wamp64\www\BMB_AUTOS\
 │   ├── cars.php         # Vehicle listing endpoint for app catalog screens
 │   ├── car_details.php  # Individual vehicle detail endpoint
 │   ├── bookings.php     # Service and booking management endpoints
+│   ├── purchase_car.php # Vehicle purchase endpoint with stock validation
 │   ├── trade_in.php     # Trade-in submission and processing endpoint
 │   ├── update_profile.php # User profile update endpoint for mobile clients
 ├── images/              # Vehicle photography, branding, and vector logo
@@ -75,7 +105,7 @@ C:\wamp64\www\BMB_AUTOS\
 ├── screenshots/         # Application interface previews for documentation
 ├── about.php            # Company mission and business background
 ├── admin.php            # Admin control panel (Staff CRUD & master schedule)
-├── cars.php             # Vehicle showroom with lightbox preview & consignment modal
+├── cars.php             # Vehicle showroom with lightbox preview, filters, and purchase flow
 ├── db.php               # Global PDO database connection handler
 ├── index.php            # Dynamic homepage with active bookings & featured fleet
 ├── login.php            # Dual-action sign in and registration portal
@@ -84,11 +114,13 @@ C:\wamp64\www\BMB_AUTOS\
 ├── nav.php              # Role-based adaptive navigation header
 ├── process.php          # Centralized AJAX/Form API endpoint
 ├── profile.php          # Customer account editing and account deletion
+├── receipt.php          # Printable purchase receipt page for completed orders
 ├── sales.php            # Sales rep consignment and inventory publishing
 ├── script.js            # Asynchronous form handlers & toast notification system
 ├── servicing.php        # Service & maintenance booking interface
 ├── setup_db.php         # 1-Click automated database installer & data seeder
-└── support.php          # Customer dispute resolution & complaint filing
+├── support.php          # Customer dispute resolution & complaint filing
+└── README.md            # Project overview and documentation
 ```
 
 ## Setup & Execution Guide
@@ -122,34 +154,9 @@ C:\wamp64\www\BMB_AUTOS\
 
 	<http://localhost/BMB_AUTOS/index.php>
 
-## API Testing & Authentication
+4. **Test the purchase flow**
 
-The REST API can be tested in several ways, including Postman, curl, or directly in a browser when the endpoint is public. For protected routes, the API expects an HTTP `Authorization` header with a Bearer token.
-
-Example header format:
-
-```http
-Authorization: Bearer YOUR_API_TOKEN
-```
-
-### Example API Flow
-
-1. Register or log in using the mobile endpoints, such as `api/register.php` or `api/login.php`.
-2. Copy the returned `token` value from the JSON response.
-3. Include it in the request header for protected endpoints, for example:
-
-```http
-GET http://localhost/BMB_AUTOS/api/cars.php
-Authorization: Bearer YOUR_API_TOKEN
-```
-
-4. Use the same token for routes like `api/bookings.php`, `api/car_details.php`, `api/trade_in.php`, and `api/update_profile.php`.
-
-### Notes
-
-- Public endpoints can usually be tested directly in the browser.
-- Protected endpoints will return an authentication error if the token is missing, invalid, or expired.
-- When using Postman, set the request type to `GET`, `POST`, or `PUT` as required and add the token under the `Authorization` tab using the Bearer Token type.
+	Log in as a customer, open the showroom, purchase a vehicle, and confirm the receipt page loads with a valid `transaction_id`.
 
 ## Demo Login Credentials
 
