@@ -198,7 +198,7 @@ switch ($action) {
             exit;
         }
 
-        $status = $newStock > 0 ? 'Available' : 'Sold';
+        $status = ($newStock > 0) ? 'Available' : 'Sold';
 
         $stmt = $pdo->prepare("UPDATE vehicles SET stock_quantity = ?, status = ? WHERE id = ?");
         $stmt->execute([$newStock, $status, $vehicleId]);

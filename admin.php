@@ -30,7 +30,7 @@ $inventory = $pdo->query("SELECT * FROM vehicles ORDER BY status DESC, make ASC,
                 <div>
                     <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold uppercase text-indigo-800">Admin Control</span>
                     <h2 class="mt-2 text-2xl font-bold text-slate-900">Inventory Stock Management</h2>
-                    <p class="text-sm text-slate-500">Adjust stock levels for each vehicle and update its showroom availability instantly.</p>
+                    <p class="text-sm text-slate-500">Adjust stock levels for each vehicle. Setting stock to 0 automatically marks the vehicle as Sold.</p>
                 </div>
             </div>
 
@@ -43,7 +43,7 @@ $inventory = $pdo->query("SELECT * FROM vehicles ORDER BY status DESC, make ASC,
                             <th class="px-3 py-3 sm:px-6">Color</th>
                             <th class="px-3 py-3 sm:px-6">Status</th>
                             <th class="px-3 py-3 sm:px-6">Current Stock</th>
-                            <th class="px-3 py-3 sm:px-6">Update Stock</th>
+                            <th class="px-3 py-3 sm:px-6">Update</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -59,11 +59,12 @@ $inventory = $pdo->query("SELECT * FROM vehicles ORDER BY status DESC, make ASC,
                             </td>
                             <td class="px-3 py-4 sm:px-6 font-bold text-slate-800"><?= (int)$vehicle['stock_quantity'] ?></td>
                             <td class="px-3 py-4 sm:px-6">
-                                <form method="POST" class="flex flex-col gap-2 sm:flex-row">
+                                <!-- Form now has a specific class for JS targeting -->
+                                <form method="POST" action="process.php" class="update-stock-form flex flex-row items-center gap-2">
                                     <input type="hidden" name="action" value="update_stock">
                                     <input type="hidden" name="vehicle_id" value="<?= (int)$vehicle['id'] ?>">
-                                    <input type="number" min="0" name="stock_quantity" value="<?= (int)$vehicle['stock_quantity'] ?>" class="w-24 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
-                                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-500">Update Stock</button>
+                                    <input type="number" min="0" name="stock_quantity" value="<?= (int)$vehicle['stock_quantity'] ?>" class="w-20 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                                    <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-500">Update</button>
                                 </form>
                             </td>
                         </tr>
@@ -210,7 +211,8 @@ $inventory = $pdo->query("SELECT * FROM vehicles ORDER BY status DESC, make ASC,
             setTimeout(() => window.location.reload(), 800);
         });
 
-        document.querySelectorAll('form[action="update_stock"]').forEach(form => {
+        // FIXED: Selects the correct class and handles the AJAX update
+        document.querySelectorAll('.update-stock-form').forEach(form => {
             form.addEventListener('submit', async function (event) {
                 event.preventDefault();
                 const formData = new FormData(form);
@@ -219,7 +221,14 @@ $inventory = $pdo->query("SELECT * FROM vehicles ORDER BY status DESC, make ASC,
                     body: formData
                 });
                 const result = await response.json();
-                showToast(result.message);
+                
+                // Uses the showToast function from script.js
+                if (typeof showToast === 'function') {
+                    showToast(result.message);
+                } else {
+                    alert(result.message);
+                }
+                
                 if (result.status === 'success') {
                     setTimeout(() => window.location.reload(), 800);
                 }
