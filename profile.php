@@ -10,13 +10,14 @@ $user = $_SESSION['user'];
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BMB Autos | My Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
     <?php include 'nav.php'; ?>
-    <main class="mx-auto max-w-2xl px-6 py-10">
-        <div class="rounded-3xl bg-white p-8 shadow-xl ring-1 ring-slate-200">
+    <main class="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-10">
+        <div class="rounded-3xl bg-white p-5 sm:p-8 shadow-xl ring-1 ring-slate-200">
             <h1 class="text-2xl font-bold">Account Management</h1>
             <p class="text-sm text-slate-600 mt-1">Manage your personal credentials and booking history.</p>
 

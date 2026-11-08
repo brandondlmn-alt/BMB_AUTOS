@@ -184,6 +184,89 @@ switch ($action) {
         echo json_encode(['status' => 'success', 'message' => 'Account deleted.']);
         break;
 
+    case 'update_stock':
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo json_encode(['status' => 'error', 'message' => 'Unauthorized.']);
+            exit;
+        }
+
+        $vehicleId = (int)($_POST['vehicle_id'] ?? 0);
+        $newStock = max(0, (int)($_POST['stock_quantity'] ?? 0));
+
+        if ($vehicleId <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid vehicle selected.']);
+            exit;
+        }
+
+        $status = $newStock > 0 ? 'Available' : 'Sold';
+
+        $stmt = $pdo->prepare("UPDATE vehicles SET stock_quantity = ?, status = ? WHERE id = ?");
+        $stmt->execute([$newStock, $status, $vehicleId]);
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Vehicle stock updated to $newStock. Status set to $status."
+        ]);
+        break;
+
+    case 'purchase_vehicle':
+        if (!isset($_SESSION['user'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Please log in to complete your purchase.']);
+            exit;
+        }
+
+        $carId = (int)($_POST['car_id'] ?? 0);
+        $amount = trim($_POST['amount'] ?? '');
+        $paymentMethod = trim($_POST['payment_method'] ?? 'Card');
+
+        if ($carId <= 0 || empty($amount)) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid vehicle purchase request.']);
+            exit;
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            $vehicleStmt = $pdo->prepare("SELECT id, stock_number, make, model, color, stock_quantity, status FROM vehicles WHERE id = ? FOR UPDATE");
+            $vehicleStmt->execute([$carId]);
+            $vehicle = $vehicleStmt->fetch();
+
+            if (!$vehicle) {
+                $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => 'Vehicle not found.']);
+                exit;
+            }
+
+            if ((int)$vehicle['stock_quantity'] <= 0 || $vehicle['status'] === 'Sold') {
+                $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => 'This vehicle is no longer available.']);
+                exit;
+            }
+
+            $newStock = max((int)$vehicle['stock_quantity'] - 1, 0);
+            $newStatus = $newStock > 0 ? 'Available' : 'Sold';
+
+            $updateVehicle = $pdo->prepare("UPDATE vehicles SET stock_quantity = ?, status = ? WHERE id = ?");
+            $updateVehicle->execute([$newStock, $newStatus, $carId]);
+
+            $transactionStmt = $pdo->prepare("INSERT INTO transactions (user_id, vehicle_id, amount, payment_method, status) VALUES (?, ?, ?, ?, 'Completed')");
+            $transactionStmt->execute([$_SESSION['user']['id'], $carId, $amount, $paymentMethod]);
+            $transactionId = $pdo->lastInsertId();
+
+            $pdo->commit();
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Purchase completed successfully.',
+                'transaction_id' => (int)$transactionId,
+                'redirect' => 'receipt.php?transaction_id=' . (int)$transactionId
+            ]);
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        break;
+
     default:
         echo json_encode(['status' => 'error', 'message' => 'Invalid action requested.']);
         break;

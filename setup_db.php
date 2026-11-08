@@ -33,10 +33,10 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
 
-    // 2. Vehicles Table (ADDED stock_number)
+    // 2. Vehicles Table (Updated with Stock & Color)
     $pdo->exec("CREATE TABLE vehicles (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        stock_number VARCHAR(50) NOT NULL UNIQUE, 
+        stock_number VARCHAR(50) NOT NULL UNIQUE,
         seller_id INT NULL,
         make VARCHAR(50) NOT NULL,
         model VARCHAR(50) NOT NULL,
@@ -46,6 +46,8 @@ try {
         type VARCHAR(50) DEFAULT 'Sedan',
         transmission VARCHAR(20) DEFAULT 'Automatic',
         fuel_type VARCHAR(20) DEFAULT 'Petrol',
+        color VARCHAR(50) DEFAULT 'White',
+        stock_quantity INT DEFAULT 1,
         image VARCHAR(255) DEFAULT 'images/car-placeholder.jpg',
         evaluation_grade VARCHAR(50) DEFAULT 'Pending Inspection',
         status ENUM('Available', 'Pending Evaluation', 'Listed', 'Sold') DEFAULT 'Available',
@@ -105,38 +107,62 @@ try {
     ];
     foreach ($users as $u) { $userStmt->execute($u); }
 
-    // --- SEED VEHICLES (Now with Stock Numbers) ---
-    $carStmt = $pdo->prepare("INSERT INTO vehicles (stock_number, seller_id, make, model, year, price, mileage, type, transmission, fuel_type, image, evaluation_grade, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // --- SEED 50 VEHICLES ---
+    $carStmt = $pdo->prepare("INSERT INTO vehicles (stock_number, seller_id, make, model, year, price, mileage, type, transmission, fuel_type, color, stock_quantity, image, evaluation_grade, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $cars = [
-        // Dealership Cars (seller_id = null)
-        ['STK-1001', null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2023, 'R 689,900', '19,500 km', 'Bakkie', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1002', null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2022, 'R 429,000', '22,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1003', null, 'Mercedes-Benz', 'C200 AMG Line', 2021, 'R 579,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1004', null, 'Ford', 'Ranger 2.0 Wildtrak', 2022, 'R 639,500', '28,000 km', 'Bakkie', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1005', null, 'Audi', 'RS3 Sportback', 2023, 'R 1,150,000', '8,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1006', null, 'Land Rover', 'Defender 110', 2022, 'R 1,450,000', '24,000 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1007', null, 'Kia', 'Sportage GT-Line', 2023, 'R 720,000', '12,500 km', 'SUV', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1008', null, 'Volkswagen', 'Golf 8 R', 2022, 'R 850,000', '15,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1009', null, 'Isuzu', 'D-Max 3.0 LSE', 2023, 'R 760,000', '10,000 km', 'Bakkie', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        
-        // NEW CARS ADDED!
-        ['STK-1010', null, 'Mazda', 'CX-5 2.0 Dynamic', 2022, 'R 480,000', '18,000 km', 'SUV', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1011', null, 'Honda', 'Civic 1.5T Sport', 2021, 'R 450,000', '30,000 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1012', null, 'Porsche', '911 Carrera S', 2020, 'R 2,450,000', '12,000 km', 'Coupe', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-        ['STK-1013', null, 'Renault', 'Duster 1.5 dCi', 2021, 'R 320,000', '45,000 km', 'SUV', 'Manual', 'Diesel', 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
-        ['STK-1014', null, 'Nissan', 'NP200 1.6', 2020, 'R 185,000', '65,000 km', 'Bakkie', 'Manual', 'Petrol', 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
-        
-        // Thabo's Cars (ID: 4)
-        ['STK-2001', 4, 'Volkswagen', 'Golf 8 GTI', 2021, 'R 580,000', '31,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation'],
-        ['STK-2002', 4, 'Toyota', 'Corolla 1.8 Prestige', 2022, 'R 289,900', '28,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
-
-        // Ayesha's Cars (ID: 5)
-        ['STK-3001', 5, 'BMW', '320i M Sport', 2019, 'R 415,000', '48,500 km', 'Sedan', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
-        ['STK-3002', 5, 'Audi', 'A3 35 TFSI Sportback', 2020, 'R 359,500', '44,000 km', 'Hatchback', 'Automatic', 'Petrol', 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation'],
-
-        // David's Cars (ID: 6)
-        ['STK-4001', 6, 'Toyota', 'Fortuner 2.8 GD-6', 2020, 'R 649,000', '52,000 km', 'SUV', 'Automatic', 'Diesel', 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available']
+        ['STK-1001', null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2023, 'R 689,900', '19,500 km', 'Bakkie', 'Automatic', 'Diesel', 'Glacier White', 2, 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1002', null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2023, 'R 689,900', '21,000 km', 'Bakkie', 'Automatic', 'Diesel', 'Graphite Grey', 1, 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1003', null, 'Toyota', 'Hilux 2.8 GD-6 4x4', 2022, 'R 650,000', '35,000 km', 'Bakkie', 'Manual', 'Diesel', 'Attitude Black', 1, 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1004', null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2022, 'R 429,000', '22,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Pure White', 3, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1005', null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2021, 'R 399,000', '45,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Flash Red', 1, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1006', null, 'Volkswagen', 'Polo GTI 2.0 TSI', 2023, 'R 459,000', '10,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Deep Black Pearl', 2, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1007', null, 'Mercedes-Benz', 'C200 AMG Line', 2021, 'R 579,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'Polar White', 1, 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1008', null, 'Mercedes-Benz', 'C200 AMG Line', 2020, 'R 520,000', '55,000 km', 'Sedan', 'Automatic', 'Petrol', 'Obsidian Black', 1, 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1009', null, 'Ford', 'Ranger 2.0 Wildtrak', 2022, 'R 639,500', '28,000 km', 'Bakkie', 'Automatic', 'Diesel', 'Cyber Orange', 1, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1010', null, 'Ford', 'Ranger 2.0 Wildtrak', 2022, 'R 639,500', '29,500 km', 'Bakkie', 'Automatic', 'Diesel', 'Meteor Grey', 2, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1011', null, 'Audi', 'RS3 Sportback', 2023, 'R 1,150,000', '8,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Kyalami Green', 1, 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1012', null, 'Audi', 'RS3 Sportback', 2022, 'R 1,050,000', '18,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Mythos Black', 1, 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1013', null, 'Land Rover', 'Defender 110', 2022, 'R 1,450,000', '24,000 km', 'SUV', 'Automatic', 'Diesel', 'Pangea Green', 1, 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1014', null, 'Land Rover', 'Defender 110', 2021, 'R 1,350,000', '44,000 km', 'SUV', 'Automatic', 'Diesel', 'Fuji White', 1, 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1015', null, 'Kia', 'Sportage GT-Line', 2023, 'R 720,000', '12,500 km', 'SUV', 'Automatic', 'Petrol', 'Lunar Silver', 2, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1016', null, 'Kia', 'Sportage GT-Line', 2023, 'R 720,000', '14,000 km', 'SUV', 'Automatic', 'Petrol', 'Infra Red', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1017', null, 'Volkswagen', 'Golf 8 R', 2022, 'R 850,000', '15,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Lapiz Blue', 1, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1018', null, 'Volkswagen', 'Golf 8 R', 2022, 'R 845,000', '16,500 km', 'Hatchback', 'Automatic', 'Petrol', 'Pure White', 2, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1019', null, 'Isuzu', 'D-Max 3.0 LSE', 2023, 'R 760,000', '10,000 km', 'Bakkie', 'Automatic', 'Diesel', 'Desert Orange', 1, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1020', null, 'Isuzu', 'D-Max 3.0 LSE', 2022, 'R 710,000', '30,000 km', 'Bakkie', 'Automatic', 'Diesel', 'Splash White', 2, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1021', null, 'Mazda', 'CX-5 2.0 Dynamic', 2022, 'R 480,000', '18,000 km', 'SUV', 'Automatic', 'Petrol', 'Soul Red Crystal', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1022', null, 'Mazda', 'CX-5 2.0 Dynamic', 2022, 'R 475,000', '22,000 km', 'SUV', 'Automatic', 'Petrol', 'Machine Grey', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1023', null, 'Honda', 'Civic 1.5T Sport', 2021, 'R 450,000', '30,000 km', 'Sedan', 'Automatic', 'Petrol', 'Platinum White', 2, 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1024', null, 'Honda', 'Civic 1.5T Sport', 2021, 'R 440,000', '35,000 km', 'Sedan', 'Automatic', 'Petrol', 'Crystal Black', 1, 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1025', null, 'Porsche', '911 Carrera S', 2020, 'R 2,450,000', '12,000 km', 'Coupe', 'Automatic', 'Petrol', 'Guards Red', 1, 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1026', null, 'Porsche', '911 Carrera S', 2019, 'R 2,150,000', '28,000 km', 'Coupe', 'Automatic', 'Petrol', 'GT Silver', 1, 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1027', null, 'Renault', 'Duster 1.5 dCi', 2021, 'R 320,000', '45,000 km', 'SUV', 'Manual', 'Diesel', 'Iron Blue', 3, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1028', null, 'Renault', 'Duster 1.5 dCi', 2022, 'R 350,000', '20,000 km', 'SUV', 'Manual', 'Diesel', 'Highland Grey', 2, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1029', null, 'Nissan', 'NP200 1.6', 2020, 'R 185,000', '65,000 km', 'Bakkie', 'Manual', 'Petrol', 'White', 5, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1030', null, 'Nissan', 'NP200 1.6', 2021, 'R 205,000', '40,000 km', 'Bakkie', 'Manual', 'Petrol', 'Silver', 2, 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1031', null, 'BMW', 'X5 xDrive30d', 2022, 'R 1,250,000', '25,000 km', 'SUV', 'Automatic', 'Diesel', 'Alpine White', 1, 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1032', null, 'BMW', 'X5 xDrive30d', 2021, 'R 1,100,000', '45,000 km', 'SUV', 'Automatic', 'Diesel', 'Carbon Black', 1, 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1033', null, 'Hyundai', 'Tucson 2.0 Elite', 2023, 'R 680,000', '15,000 km', 'SUV', 'Automatic', 'Petrol', 'Phantom Black', 2, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1034', null, 'Hyundai', 'Tucson 2.0 Elite', 2022, 'R 620,000', '32,000 km', 'SUV', 'Automatic', 'Petrol', 'White Cream', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1035', null, 'Toyota', 'Starlet 1.5 Xr', 2023, 'R 310,000', '10,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Shadow Grey', 4, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1036', null, 'Toyota', 'Starlet 1.5 Xr', 2022, 'R 280,000', '25,000 km', 'Hatchback', 'Manual', 'Petrol', 'Mystic Pearl White', 3, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1037', null, 'Suzuki', 'Swift 1.2 GLX', 2023, 'R 230,000', '5,000 km', 'Hatchback', 'Manual', 'Petrol', 'Speedy Blue', 2, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1038', null, 'Suzuki', 'Swift 1.2 GLX', 2021, 'R 190,000', '42,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Arctic White', 2, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1039', null, 'Haval', 'Jolion 1.5T Super Luxury', 2023, 'R 420,000', '12,000 km', 'SUV', 'Automatic', 'Petrol', 'Vivid Green', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1040', null, 'Haval', 'Jolion 1.5T Super Luxury', 2022, 'R 380,000', '28,000 km', 'SUV', 'Automatic', 'Petrol', 'Hamilton White', 2, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1041', null, 'Chery', 'Tiggo 4 Pro', 2023, 'R 340,000', '9,000 km', 'SUV', 'Automatic', 'Petrol', 'Blood Red', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1042', null, 'Chery', 'Tiggo 4 Pro', 2022, 'R 310,000', '22,000 km', 'SUV', 'Automatic', 'Petrol', 'Silver', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1043', null, 'Jeep', 'Wrangler Rubicon', 2021, 'R 950,000', '35,000 km', 'SUV', 'Automatic', 'Petrol', 'Firecracker Red', 1, 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1044', null, 'Jeep', 'Wrangler Rubicon', 2020, 'R 880,000', '50,000 km', 'SUV', 'Automatic', 'Petrol', 'Sting-Gray', 1, 'https://images.unsplash.com/photo-1594502184342-2e12f877aa73?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1045', null, 'Volvo', 'XC60 B5 Inscription', 2022, 'R 890,000', '18,000 km', 'SUV', 'Automatic', 'Petrol', 'Crystal White', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1046', null, 'Volvo', 'XC60 B5 Inscription', 2021, 'R 820,000', '38,000 km', 'SUV', 'Automatic', 'Petrol', 'Onyx Black', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1047', null, 'Mini', 'Cooper S', 2022, 'R 550,000', '20,000 km', 'Hatchback', 'Automatic', 'Petrol', 'British Racing Green', 1, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1048', null, 'Mini', 'Cooper S', 2020, 'R 450,000', '45,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Chili Red', 1, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-1049', null, 'Subaru', 'Outback 2.5i Field', 2023, 'R 790,000', '10,000 km', 'SUV', 'Automatic', 'Petrol', 'Autumn Green', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade A Certified', 'Available'],
+        ['STK-1050', null, 'Subaru', 'Outback 2.5i Field', 2021, 'R 650,000', '40,000 km', 'SUV', 'Automatic', 'Petrol', 'Crystal Black', 1, 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available'],
+        ['STK-2001', 4, 'Volkswagen', 'Golf 8 GTI', 2021, 'R 580,000', '31,000 km', 'Hatchback', 'Automatic', 'Petrol', 'Moonstone Grey', 1, 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=80', 'Pending Inspection', 'Pending Evaluation'],
+        ['STK-3001', 5, 'BMW', '320i M Sport', 2019, 'R 415,000', '48,500 km', 'Sedan', 'Automatic', 'Petrol', 'Portimao Blue', 1, 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=80', 'Grade B Certified', 'Available']
     ];
 
     foreach ($cars as $car) { $carStmt->execute($car); }

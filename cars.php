@@ -2,9 +2,30 @@
 session_start();
 require_once 'db.php';
 
-// Retrieve all available vehicles from MySQL database
-$stmt = $pdo->query("SELECT * FROM vehicles WHERE status = 'Available' ORDER BY id DESC");
+$search = trim($_GET['search'] ?? '');
+$make = trim($_GET['make'] ?? '');
+
+$query = "SELECT * FROM vehicles WHERE status = 'Available' AND stock_quantity > 0";
+$params = [];
+
+if (!empty($search)) {
+    $query .= " AND (make LIKE ? OR model LIKE ? OR color LIKE ? OR stock_number LIKE ?)";
+    $term = "%{$search}%";
+    $params = [$term, $term, $term, $term];
+}
+
+if (!empty($make)) {
+    $query .= " AND make = ?";
+    $params[] = $make;
+}
+
+$query .= " ORDER BY id DESC";
+$stmt = $pdo->prepare($query);
+$stmt->execute($params);
 $cars = $stmt->fetchAll();
+
+$makeStmt = $pdo->query("SELECT DISTINCT make FROM vehicles WHERE status = 'Available' AND stock_quantity > 0 ORDER BY make");
+$makes = $makeStmt->fetchAll(PDO::FETCH_COLUMN);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,6 +57,28 @@ $cars = $stmt->fetchAll();
             <button onclick="document.getElementById('sellModal').classList.remove('hidden')" class="whitespace-nowrap rounded-2xl bg-white px-7 py-4 font-bold text-blue-700 shadow-lg hover:bg-slate-100 transition duration-200">
                 Sell My Car
             </button>
+        </section>
+
+        <!-- Search and Filter Section -->
+        <section class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <form method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center">
+                <div class="flex-1">
+                    <label for="search" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Search Inventory</label>
+                    <input id="search" name="search" type="text" value="<?= htmlspecialchars($search) ?>" placeholder="Search by make, model, color, or stock number" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="lg:w-64">
+                    <label for="make" class="mb-1 block text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Make</label>
+                    <select id="make" name="make" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Makes</option>
+                        <?php foreach ($makes as $makeOption): ?>
+                            <option value="<?= htmlspecialchars($makeOption) ?>" <?= $make === $makeOption ? 'selected' : '' ?>><?= htmlspecialchars($makeOption) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="lg:self-end">
+                    <button type="submit" class="w-full rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow hover:bg-blue-500">Search</button>
+                </div>
+            </form>
         </section>
 
         <!-- Main Vehicle Inventory Section -->
@@ -87,24 +130,28 @@ $cars = $stmt->fetchAll();
                     <!-- Vehicle Specification Body -->
                     <div class="p-6 flex flex-col flex-grow justify-between">
                         <div>
-                            <h3 class="text-xl font-bold text-slate-900"><?= "{$car['year']} {$car['make']} {$car['model']}" ?></h3>
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-xl font-bold text-slate-900"><?= htmlspecialchars($car['year']) ?> <?= htmlspecialchars($car['make']) ?> <?= htmlspecialchars($car['model']) ?></h3>
+                                <span class="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-600">Stock <?= (int)$car['stock_quantity'] ?></span>
+                            </div>
                             <p class="mt-2 text-2xl font-extrabold text-blue-600"><?= htmlspecialchars($car['price']) ?></p>
 
                             <div class="mt-5 grid grid-cols-2 gap-2.5 border-t border-b border-slate-100 py-3.5 text-xs text-slate-600">
+                                <div><strong>Color:</strong> <?= htmlspecialchars($car['color'] ?? 'White') ?></div>
                                 <div><strong>Mileage:</strong> <?= htmlspecialchars($car['mileage'] ?? 'Low km') ?></div>
                                 <div><strong>Transmission:</strong> <?= htmlspecialchars($car['transmission'] ?? 'Automatic') ?></div>
                                 <div><strong>Fuel:</strong> <?= htmlspecialchars($car['fuel_type'] ?? 'Petrol') ?></div>
-                                <div><strong>Status:</strong> <span class="text-emerald-600 font-bold"><?= htmlspecialchars($car['status']) ?></span></div>
                             </div>
                         </div>
 
                         <button 
                             type="button"
                             class="purchase-trigger mt-6 w-full rounded-2xl bg-slate-900 py-3.5 text-sm font-bold text-white transition duration-200 hover:bg-slate-800"
+                            data-car-id="<?= (int)$car['id'] ?>"
                             data-vehicle="<?= htmlspecialchars("{$car['year']} {$car['make']} {$car['model']}") ?>"
                             data-price="<?= htmlspecialchars($car['price']) ?>"
                         >
-                            Inquire / Purchase
+                            Purchase Now
                         </button>
                     </div>
                 </div>
@@ -222,10 +269,37 @@ $cars = $stmt->fetchAll();
 
         // Purchase inquiry triggers
         document.querySelectorAll('.purchase-trigger').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const vehicle = btn.getAttribute('data-vehicle');
-                const price = btn.getAttribute('data-price');
-                showToast(`Inquiry created for ${vehicle} (${price}). Our sales team will reach out.`);
+            btn.addEventListener('click', async () => {
+                const carId = btn.dataset.carId;
+                const vehicle = btn.dataset.vehicle;
+                const price = btn.dataset.price;
+
+                if (!confirm(`Purchase ${vehicle} for ${price}?`)) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('action', 'purchase_vehicle');
+                formData.append('car_id', carId);
+                formData.append('amount', price);
+                formData.append('payment_method', 'Card');
+
+                try {
+                    const response = await fetch('process.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    showToast(result.message || 'Purchase processed.');
+
+                    if (result.status === 'success' && result.redirect) {
+                        setTimeout(() => {
+                            window.location.href = result.redirect;
+                        }, 800);
+                    }
+                } catch (error) {
+                    showToast('Unable to process purchase.');
+                }
             });
         });
     </script>

@@ -16,23 +16,24 @@ $jobs = $bookings->fetchAll();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BMB Autos | Mechanic Workbench</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
     <?php include 'nav.php'; ?>
 
-    <main class="mx-auto max-w-7xl px-6 py-10 space-y-8">
-        <div class="rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <main class="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+        <div class="rounded-3xl bg-white p-5 sm:p-8 shadow-sm ring-1 ring-slate-200">
             <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase text-amber-800">Mechanic Operations</span>
-            <h1 class="mt-2 text-3xl font-bold">Assigned Servicing & Pre-Sale Evaluations</h1>
+            <h1 class="mt-2 text-2xl sm:text-3xl font-bold">Assigned Servicing & Pre-Sale Evaluations</h1>
             <p class="text-sm text-slate-600 mt-1">Perform vehicle safety inspections, oil/brake servicing, and assign condition grades for sales listings.</p>
 
             <div class="mt-8 space-y-6">
                 <?php foreach ($jobs as $job): ?>
-                <div class="rounded-2xl border border-slate-200 p-6 bg-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div class="rounded-2xl border border-slate-200 p-4 sm:p-6 bg-slate-50 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div class="space-y-2">
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <span class="rounded-full bg-blue-600 px-3 py-0.5 text-xs font-bold text-white"><?= htmlspecialchars($job['service_type']) ?></span>
                             <span class="text-xs text-slate-500">Booking #<?= $job['id'] ?> | Scheduled: <?= $job['booking_date'] ?> @ <?= substr($job['booking_time'], 0, 5) ?></span>
                         </div>
